@@ -13,7 +13,7 @@
 :root{
   --bg:#f2f4f1; --surface:#ffffff; --ink:#17221d; --muted:#5b6a62; --line:#dbe2dd;
   --accent:#1d5c48; --accent-ink:#ffffff; --accent-soft:#e1ede7;
-  --in:#1d7a53; --in-soft:#e0f0e7; --out:#bf3f2b; --out-soft:#f7e4df; --warn:#a86a00;
+  --in:#1d7a53; --in-soft:#e0f0e7; --out:#bf3f2b; --out-soft:#f7e4df; --warn:#a86a00; --warn-soft:#f6ecd6;
   --font-body:"Noto Sans SC",-apple-system,"PingFang SC","Hiragino Sans","Microsoft YaHei",sans-serif;
   --font-num:"DM Mono",ui-monospace,"SF Mono",Consolas,monospace;
   --r:10px; color-scheme:light;
@@ -21,7 +21,7 @@
 @media (prefers-color-scheme: dark){:root{
   --bg:#0f1512; --surface:#17201b; --ink:#e3ebe6; --muted:#93a39a; --line:#29342e;
   --accent:#6cc3a0; --accent-ink:#0f1512; --accent-soft:#1d3128;
-  --in:#5fc792; --in-soft:#183226; --out:#f0826d; --out-soft:#3a221c; --warn:#e6b14f; color-scheme:dark}}
+  --in:#5fc792; --in-soft:#183226; --out:#f0826d; --out-soft:#3a221c; --warn:#e6b14f; --warn-soft:#3a2f17; color-scheme:dark}}
 
 *{box-sizing:border-box}
 html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg)}
@@ -75,19 +75,22 @@ button,input,select{font:inherit;color:inherit}
 .v.in{color:var(--in)} .v.out{color:var(--out)}
 
 /* grid */
-.grid{display:grid;grid-template-columns:minmax(0,370px) minmax(0,1fr);gap:18px;align-items:start}
+.grid{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:18px;align-items:start}
 .col{display:flex;flex-direction:column;gap:18px;min-width:0}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:14px;min-width:0}
 .card-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card-h small{font-size:12px;color:var(--muted)}
 
 /* form */
 .seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .seg button{border:0;background:transparent;padding:9px;cursor:pointer;font-weight:500;color:var(--muted)}
 .seg button[aria-pressed="true"][data-t="in"]{background:var(--in-soft);color:var(--in)}
 .seg button[aria-pressed="true"][data-t="out"]{background:var(--out-soft);color:var(--out)}
-label.f,.f{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted)}
+label.f,.f{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);min-width:0}
 .inp{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 11px;font-size:16px;width:100%;min-width:0}
-.amount{font-family:var(--font-num);font-size:24px;padding:8px 11px}
+.amount-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:10px}
+.amount-row b{font-family:var(--font-num);font-size:26px;font-weight:500}
+.amount-row.out b{color:var(--out)} .amount-row.in b{color:var(--in)}
 .row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .row2 > *{min-width:0}
 .row2 .inp{height:46px}
@@ -100,18 +103,37 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left}
 .btn{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);font-weight:500;padding:7px 12px}
+.btn.ghost.armed{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
 .msg{font-size:13px;min-height:1.2em;color:var(--muted)}
 .msg.err{color:var(--out)}
+.msg.warn{color:var(--warn)}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink);cursor:pointer;align-self:flex-start}
+.chk input{width:18px;height:18px;accent-color:var(--accent)}
 
-/* count */
-.count{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center;font-size:14px}
-.count .d{font-family:var(--font-num);color:var(--muted);text-align:right}
-.count input{width:100%;padding:5px 8px;font-family:var(--font-num)}
-.count .s{font-family:var(--font-num);text-align:right;min-width:86px}
-.diff{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:10px;font-size:14px}
+/* denomination grids (form + count) */
+.den,.count{display:grid;gap:6px 8px;align-items:center;font-size:14px}
+.den{grid-template-columns:auto minmax(0,1fr)}
+.den.chg{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr)}
+.den:not(.chg) .c{display:none}
+.count{grid-template-columns:auto auto minmax(0,1fr) 2.6em}
+.dh{font-size:11px;color:var(--muted);text-align:center}
+.dl{font-family:var(--font-num);color:var(--ink);white-space:nowrap;display:flex;flex-direction:column;line-height:1.2}
+.dl small{font-size:10px;color:var(--muted)}
+.bk{font-family:var(--font-num);color:var(--muted);text-align:right;min-width:2.2em}
+.df{font-family:var(--font-num);text-align:right;font-size:13px}
+.df.p{color:var(--warn)} .df.m{color:var(--out)} .df.z{color:var(--in)}
+.step{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg);height:36px}
+.step button{border:0;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:var(--muted);padding:0}
+.step button:active{background:var(--accent-soft);color:var(--accent)}
+.step input{border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);border-radius:0;background:var(--surface);
+  text-align:center;font-family:var(--font-num);font-size:16px;padding:0 2px;width:100%;min-width:0}
+.step.has input{color:var(--accent);font-weight:500}
+.diff{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:10px;font-size:14px}
 .pill{font-size:12px;border-radius:99px;padding:2px 9px;font-weight:500}
 .pill.ok{background:var(--in-soft);color:var(--in)}
 .pill.bad{background:var(--out-soft);color:var(--out)}
+.note{font-size:12px;color:var(--muted)}
+.cnt-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 
 /* chart */
 .chart{width:100%;height:auto;display:block}
@@ -133,15 +155,14 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left}
 .tx .t{min-width:0}
 .tx .t b{font-weight:500}
 .tx .t p{margin:0;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.tx .t p.dn{font-family:var(--font-num);font-size:11px}
 .tx .a{font-family:var(--font-num);font-weight:500;white-space:nowrap}
 .tx .a.in{color:var(--in)} .tx .a.out{color:var(--out)}
 .del{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 6px;border-radius:6px}
 .del.armed{background:var(--out);color:#fff}
 .empty{border:1px dashed var(--line);border-radius:8px;padding:22px;text-align:center;color:var(--muted);font-size:14px}
 
-.foot{display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between;font-size:13px;color:var(--muted)}
-.foot .open{display:flex;gap:8px;align-items:end}
-.foot .open .inp{width:150px;font-family:var(--font-num)}
+.foot{font-size:13px;color:var(--muted)}
 
 @media (max-width:860px){
   .grid{grid-template-columns:minmax(0,1fr)}
@@ -151,7 +172,7 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left}
   .stat:not(.bal){border-top:1px solid var(--line)}
   .stat .v{font-size:17px}
 }
-@media (max-width:480px){ .seg .hint{display:none} }
+@media (max-width:480px){ .seg .hint{display:none} .card{padding:14px} }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -200,9 +221,12 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left}
           <button type="button" data-t="out" aria-pressed="true">支出<span class="hint"> · 从钱箱取出</span></button>
           <button type="button" data-t="in" aria-pressed="false">收入<span class="hint"> · 放入钱箱</span></button>
         </div>
-        <label class="f">金额（日元）
-          <input class="inp amount" id="fAmount" inputmode="numeric" placeholder="0" required>
-        </label>
+        <div class="f" style="gap:8px"><span id="denTitle">取出的钞票和硬币（张数 / 枚数）</span>
+          <div class="den" id="den"></div>
+          <label class="chk"><input type="checkbox" id="fChange"> <span id="chgLabel">有找回的零钱放回钱箱</span></label>
+        </div>
+        <div class="amount-row out" id="amountRow"><span class="f">金额（按面额自动计算）</span><b id="fAmount">¥0</b></div>
+        <div class="msg" id="denMsg"></div>
         <div class="f" style="gap:7px">类别
           <div class="chips" id="chips"></div>
         </div>
@@ -216,9 +240,15 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left}
       </form>
 
       <section class="card" aria-labelledby="cntH">
-        <div class="card-h"><h2 id="cntH">现金盘点</h2><button class="btn ghost" type="button" id="cntClear">清零</button></div>
+        <div class="card-h"><h2 id="cntH">现金盘点</h2><small>所有设备同步</small></div>
         <div class="count" id="count"></div>
         <div class="diff"><span>实点合计 <b class="num" id="cntTotal">¥0</b></span><span id="cntDiff"></span></div>
+        <div class="note" id="cntMeta"></div>
+        <div class="cnt-actions">
+          <button class="btn ghost" type="button" id="cntClear">清零</button>
+          <button class="btn ghost" type="button" id="cntOpen">以实点设为期初</button>
+        </div>
+        <div class="note" id="cntOpenNote"></div>
       </section>
     </div>
 
@@ -242,13 +272,7 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left}
     </div>
   </div>
 
-  <footer class="foot">
-    <div class="open">
-      <label class="f">期初余额（开始记账时钱箱里的现金）<input class="inp" id="fOpen" inputmode="numeric" placeholder="0"></label>
-      <button class="btn ghost" type="button" id="saveOpen">保存</button>
-    </div>
-    <span>手机和电脑登录同一个公司账号体系，账目实时同步；断网时也能记账，联网后自动上传。</span>
-  </footer>
+  <footer class="foot">手机和电脑登录公司账号即可使用，账目与盘点实时同步；断网时也能记账，联网后自动上传。</footer>
 </div>
 
 <script type="module">
@@ -266,16 +290,22 @@ const CATS = {
   in:  ["从银行取现","客户现金付款","退款找零","其他收入"]
 };
 const DENOMS = [10000,5000,1000,500,100,50,10,5,1];
+const DLABEL = {10000:"1万円",5000:"5千円",1000:"1千円",500:"500円",100:"100円",50:"50円",10:"10円",5:"5円",1:"1円"};
+const DSHORT = {10000:"1万",5000:"5千",1000:"1千",500:"500",100:"100",50:"50",10:"10",5:"5",1:"1"};
 const pad = n => String(n).padStart(2,"0");
 const ymd = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const yen = n => (n<0?"-":"")+"¥"+Math.abs(Math.round(n)).toLocaleString("ja-JP");
 const signed = n => (n>0?"+":"")+yen(n);
-const parseAmt = s => { const n = Number(String(s).replace(/[,，¥￥\s]/g,"")); return Number.isFinite(n) ? Math.round(n) : NaN; };
 const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const clean = m => { const r={}; for(const d of DENOMS){ const n=parseInt(m&&m[d])||0; if(n>0) r[d]=n; } return r; };
+const sumD = m => DENOMS.reduce((s,d)=>s+d*(parseInt(m&&m[d])||0),0);
+const fmtDen = m => DENOMS.filter(d=>m&&m[d]>0).map(d=>`${DSHORT[d]}×${m[d]}`).join(" ");
 
 const now = new Date();
-const S = { monthTx:[], months:{}, opening:0, ym:[now.getFullYear(), now.getMonth()], type:"out", cat:CATS.out[0], catView:"out",
-            db:null, user:null, loaded:false, armed:null, counts:{}, unsubMonth:null, unsubs:[] };
+const S = { monthTx:[], months:{}, opening:0, openingCounts:null, ym:[now.getFullYear(), now.getMonth()],
+            type:"out", cat:CATS.out[0], catView:"out", change:false, form:{main:{},chg:{}},
+            count:{}, countDirty:new Set(), countMeta:null, countTimer:null,
+            db:null, user:null, loaded:false, armed:null, unsubMonth:null, unsubs:[] };
 const curKey = () => `${S.ym[0]}-${pad(S.ym[1]+1)}`;
 
 /* ---------- gate ---------- */
@@ -331,14 +361,29 @@ onAuthStateChanged(auth, user=>{
 /* ---------- sync ---------- */
 function setSync(s,t){ $("#sync").dataset.s=s; $("#syncText").textContent=t; }
 function onErr(e){
-  setSync("err", e.code==="permission-denied" ? "没有权限读取账本" : "同步中断，请刷新页面");
+  setSync("err", e.code==="permission-denied" ? "没有权限读取账本（请确认安全规则已更新）" : "同步中断，请刷新页面");
 }
 function startSync(){
   S.unsubs.push(onSnapshot(doc(S.db,"meta","settings"), s=>{
-    S.opening = s.exists() ? (Number(s.data().opening)||0) : 0; render();
+    const v = s.exists() ? s.data() : {};
+    S.opening = Number(v.opening)||0;
+    S.openingCounts = v.openingCounts ? clean(v.openingCounts) : null;
+    render();
   }, onErr));
   S.unsubs.push(onSnapshot(collection(S.db,"months"), snap=>{
-    S.months={}; snap.forEach(d=>{ const v=d.data(); S.months[d.id]={in:Number(v.in)||0, out:Number(v.out)||0}; }); render();
+    S.months={}; snap.forEach(d=>{ const v=d.data(); S.months[d.id]={in:Number(v.in)||0, out:Number(v.out)||0, d:v.d||{}}; }); render();
+  }, onErr));
+  S.unsubs.push(onSnapshot(doc(S.db,"count","current"), s=>{
+    const v = s.exists() ? s.data() : {};
+    const remote = v.counts||{};
+    const focused = document.activeElement && document.activeElement.closest("#count .step");
+    for(const d of DENOMS){
+      if(S.countDirty.has(String(d))) continue;             // 自己还没上传的改动优先
+      if(focused && focused.dataset.d==String(d)) continue;  // 正在输入的格子不被覆盖
+      S.count[d] = parseInt(remote[d])||0;
+    }
+    S.countMeta = v.updatedBy ? {by:v.updatedBy, at:v.updatedAt} : null;
+    updateCount();
   }, onErr));
   subscribeMonth();
 }
@@ -360,53 +405,103 @@ const sortTx = a => a.slice().sort((x,y)=> x.date===y.date ? (x.createdAt||0)-(y
 function startOf(key){ let b=S.opening; for(const [k,v] of Object.entries(S.months)) if(k<key) b+=v.in-v.out; return b; }
 function totalBalance(){ let b=S.opening; for(const v of Object.values(S.months)) b+=v.in-v.out; return b; }
 function balanceThrough(ds){ let b=startOf(ds.slice(0,7)); for(const t of S.monthTx) if(t.date<=ds) b+= t.type==="in"?t.amount:-t.amount; return b; }
+// 钱箱里每种面额应有的张数 = 期初张数 + 所有记录的放入 − 取出；未设期初面额时返回 null
+function expectedCounts(){
+  if(!S.openingCounts) return null;
+  const r={}; for(const d of DENOMS) r[d]=S.openingCounts[d]||0;
+  for(const v of Object.values(S.months)) for(const d of DENOMS) r[d]+=Number(v.d[d])||0;
+  return r;
+}
+function netCounts(){ const r={}; for(const v of Object.values(S.months)) for(const d of DENOMS) r[d]=(r[d]||0)+(Number(v.d[d])||0); return r; }
+
+/* ---------- steppers ---------- */
+const stepper = (k,d,v,cls="") => `<div class="step ${cls}${v>0?" has":""}" data-k="${k}" data-d="${d}">
+  <button type="button" data-op="-1" aria-label="${DLABEL[d]} 减一">−</button>
+  <input inputmode="numeric" id="${k}${d}" value="${v>0?v:""}" placeholder="0" aria-label="${DLABEL[d]} 数量">
+  <button type="button" data-op="1" aria-label="${DLABEL[d]} 加一">+</button></div>`;
+function bindSteppers(box, get, set){
+  box.addEventListener("click", e=>{
+    const b=e.target.closest("button[data-op]"); if(!b) return;
+    const st=b.closest(".step"), n=Math.max(0,(get(st.dataset.k,st.dataset.d)||0)+Number(b.dataset.op));
+    st.querySelector("input").value=n||""; st.classList.toggle("has",n>0); set(st.dataset.k,st.dataset.d,n);
+  });
+  box.addEventListener("input", e=>{
+    const st=e.target.closest(".step"); if(!st) return;
+    const v=e.target.value.replace(/\D/g,"").slice(0,4); e.target.value=v;
+    const n=parseInt(v)||0; st.classList.toggle("has",n>0); set(st.dataset.k,st.dataset.d,n);
+  });
+}
 
 /* ---------- form ---------- */
 $("#fDate").value = ymd(now);
 try{ $("#fWho").value = localStorage.getItem("cashbox.who") || ""; }catch(e){}
-try{ S.counts = JSON.parse(localStorage.getItem("cashbox.count")||"{}") || {}; }catch(e){}
 
 function renderChips(){
   $("#chips").innerHTML = CATS[S.type].map(c=>`<button type="button" aria-pressed="${c===S.cat}">${c}</button>`).join("");
 }
+function renderDen(){
+  const out=S.type==="out";
+  $("#denTitle").textContent = out ? "从钱箱取出的钞票和硬币（张数 / 枚数）" : "放入钱箱的钞票和硬币（张数 / 枚数）";
+  $("#chgLabel").textContent = out ? "有找回的零钱放回钱箱" : "有从钱箱拿出去找零";
+  const den=$("#den"); den.classList.toggle("chg",S.change);
+  den.innerHTML = `<span></span><span class="dh">${out?"取出":"放入"}</span><span class="dh c">${out?"放回":"找零取出"}</span>`+
+    DENOMS.map(d=>`<span class="dl">${DLABEL[d]}<small id="dx${d}"></small></span>${stepper("m",d,S.form.main[d])}${stepper("c",d,S.form.chg[d],"c")}`).join("");
+  updateForm();
+}
+function formTx(){
+  const main=clean(S.form.main), chg=S.change?clean(S.form.chg):{};
+  const put = S.type==="in"?main:chg, take = S.type==="in"?chg:main;
+  return { put, take, main, net: sumD(put)-sumD(take) };
+}
+function updateForm(){
+  const {put,take,main,net}=formTx(), out=S.type==="out";
+  const amount = out ? -net : net;
+  const row=$("#amountRow"); row.className="amount-row "+(out?"out":"in");
+  $("#fAmount").textContent = yen(Math.max(amount,0));
+  const exp=expectedCounts();
+  for(const d of DENOMS){ const el=$("#dx"+d); if(el) el.textContent = exp ? `钱箱有 ${exp[d]}` : ""; }
+  const msg=$("#denMsg"); msg.className="msg"; msg.textContent="";
+  if(Object.keys(main).length && amount<=0){ msg.className="msg err"; msg.textContent = out ? "放回的金额不能多于取出的金额。" : "找零的金额不能多于放入的金额。"; return; }
+  if(exp){
+    const short=DENOMS.filter(d=>(take[d]||0)>exp[d]);
+    if(short.length){ msg.className="msg warn"; msg.textContent="注意："+short.map(d=>`${DLABEL[d]} 钱箱只有 ${exp[d]} 张/枚`).join("，")+"。"; }
+  }
+}
+bindSteppers($("#den"), (k,d)=>(k==="m"?S.form.main:S.form.chg)[d]||0, (k,d,n)=>{ (k==="m"?S.form.main:S.form.chg)[d]=n; updateForm(); });
+$("#fChange").addEventListener("change", e=>{ S.change=e.target.checked; if(!S.change) S.form.chg={}; renderDen(); });
 $("#chips").addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; S.cat=b.textContent; renderChips(); });
 document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
-  S.type=b.dataset.t; S.cat=CATS[S.type][0];
+  if(S.type===b.dataset.t) return;
+  S.type=b.dataset.t; S.cat=CATS[S.type][0]; S.form={main:{},chg:{}}; S.change=false; $("#fChange").checked=false;
   document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed", x===b));
-  renderChips();
+  renderChips(); renderDen();
 }));
-renderChips();
+renderChips(); renderDen();
 
 $("#entry").addEventListener("submit", e=>{
   e.preventDefault();
   const msg=$("#fMsg"); msg.className="msg"; msg.textContent="";
-  const amount=parseAmt($("#fAmount").value);
-  if(!(amount>0)){ msg.className="msg err"; msg.textContent="请输入大于 0 的金额（整数日元）。"; return; }
+  const {put,take,main,net}=formTx(), type=S.type;
+  const amount = type==="out" ? -net : net;
+  if(!Object.keys(main).length){ msg.className="msg err"; msg.textContent=`请填写${type==="out"?"取出":"放入"}的钞票、硬币张数。`; return; }
+  if(!(amount>0)){ msg.className="msg err"; msg.textContent="金额必须大于 0，请检查找零张数。"; return; }
   const date=$("#fDate").value;
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ msg.className="msg err"; msg.textContent="请选择日期。"; return; }
   const who=$("#fWho").value.trim();
   try{ localStorage.setItem("cashbox.who", who); }catch(err){}
-  const warn = S.type==="out" && amount>totalBalance() ? "（提示：超过当前余额，请核对）" : "";
-  const type=S.type, category=S.cat;
-  // 记录与月合计在一个批次里写入；离线时先存在本机，联网后自动上传
+  const category=S.cat, dDelta={};
+  for(const d of DENOMS){ const n=(put[d]||0)-(take[d]||0); if(n) dDelta[d]=increment(n); }
+  // 记录与月合计（金额 + 各面额张数）在一个批次里写入；离线时先存在本机，联网后自动上传
   const b=writeBatch(S.db);
-  b.set(doc(collection(S.db,"tx")), { type, amount, category, date, who, note:$("#fNote").value.trim(),
+  b.set(doc(collection(S.db,"tx")), { type, amount, category, date, who, note:$("#fNote").value.trim(), put, take,
     createdAt:Date.now(), byEmail:S.user.email });
-  b.set(doc(S.db,"months",date.slice(0,7)), { [type]: increment(amount) }, { merge:true });
-  b.commit().catch(err=>{ msg.className="msg err"; msg.textContent="保存失败："+(err.code==="permission-denied"?"没有权限":err.code||err.message); });
-  $("#fAmount").value=""; $("#fNote").value="";
-  msg.textContent=`已记入：${type==="in"?"收入":"支出"} ${yen(amount)}（${category}）${warn}`;
+  b.set(doc(S.db,"months",date.slice(0,7)), { [type]: increment(amount), d: dDelta }, { merge:true });
+  b.commit().catch(err=>{ msg.className="msg err"; msg.textContent="保存失败："+(err.code==="permission-denied"?"没有权限（请确认安全规则已更新）":err.code||err.message); });
+  S.form={main:{},chg:{}}; S.change=false; $("#fChange").checked=false; $("#fNote").value="";
+  renderDen();
+  msg.textContent=`已记入：${type==="in"?"收入":"支出"} ${yen(amount)}（${category}）`;
   const [y,m]=date.split("-").map(Number);
   if(y!==S.ym[0] || m-1!==S.ym[1]){ S.ym=[y,m-1]; subscribeMonth(); }
-});
-
-/* ---------- opening balance ---------- */
-$("#saveOpen").addEventListener("click", ()=>{
-  const v=parseAmt($("#fOpen").value||"0");
-  if(!Number.isFinite(v)) return;
-  setDoc(doc(S.db,"meta","settings"), {opening:v, updatedAt:Date.now(), byEmail:S.user.email})
-    .catch(()=>{ $("#saveOpen").textContent="保存失败"; });
-  $("#saveOpen").textContent="已保存"; setTimeout(()=>$("#saveOpen").textContent="保存",1500);
 });
 
 /* ---------- month nav ---------- */
@@ -416,29 +511,64 @@ document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",
   S.catView=b.dataset.c; document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-pressed",x===b)); render();
 }));
 
-/* ---------- cash count ---------- */
+/* ---------- cash count (shared: count/current) ---------- */
 function renderCount(){
-  $("#count").innerHTML = DENOMS.map(d=>`<span class="d">${d.toLocaleString("ja-JP")}${d>=1000?" 円札":" 円"}</span>
-    <input class="inp" id="cnt${d}" inputmode="numeric" data-d="${d}" value="${S.counts[d]||""}" placeholder="0" aria-label="${d} 日元 数量">
-    <span class="s" id="cs${d}">¥0</span>`).join("");
+  $("#count").innerHTML = `<span></span><span class="dh">账面</span><span class="dh">实点</span><span class="dh">差</span>`+
+    DENOMS.map(d=>`<span class="dl">${DLABEL[d]}</span><span class="bk" id="ce${d}">—</span>${stepper("k",d,S.count[d])}<span class="df" id="cd${d}"></span>`).join("");
   updateCount();
 }
 function updateCount(){
+  const exp=expectedCounts();
+  const focused = document.activeElement && document.activeElement.closest("#count .step");
   let total=0;
-  DENOMS.forEach(d=>{ const n=parseInt(S.counts[d]||0)||0; total+=n*d; const el=$("#cs"+d); if(el) el.textContent=yen(n*d); });
+  for(const d of DENOMS){
+    const n=S.count[d]||0; total+=n*d;
+    const inp=$("#k"+d);
+    if(inp && !(focused && focused.dataset.d==String(d))){ inp.value=n||""; inp.closest(".step").classList.toggle("has",n>0); }
+    $("#ce"+d).textContent = exp ? exp[d] : "—";
+    const df=$("#cd"+d), diff = exp ? n-exp[d] : null;
+    df.textContent = diff===null||(!n&&!exp[d]) ? "" : diff===0 ? "✓" : (diff>0?"+":"")+diff;
+    df.className = "df "+(diff===null?"":diff===0?"z":diff>0?"p":"m");
+  }
   $("#cntTotal").textContent=yen(total);
-  const book=totalBalance(), diff=total-book, any=Object.values(S.counts).some(v=>parseInt(v)>0);
-  $("#cntDiff").innerHTML = !any ? `<span style="color:var(--muted)">账面 <b class="num">${yen(book)}</b></span>`
-    : diff===0 ? `<span class="pill ok">与账面一致</span>`
-    : `<span class="pill bad">${diff>0?"多出":"短少"} ${yen(Math.abs(diff))}</span>`;
+  const book=totalBalance(), diff=total-book, any=total>0;
+  $("#cntDiff").innerHTML = !any ? `<span class="note">账面余额 <b class="num">${yen(book)}</b></span>`
+    : diff===0 ? `<span class="pill ok">与账面一致 ${yen(book)}</span>`
+    : `<span class="pill bad">${diff>0?"多出":"短少"} ${yen(Math.abs(diff))}（账面 ${yen(book)}）</span>`;
+  const m=S.countMeta;
+  $("#cntMeta").textContent = m ? `最后修改：${m.by} · ${new Date(m.at).toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}` : "";
+  if(!S.openingCounts) $("#cntOpenNote").textContent="第一次使用：把钱箱里的现金全部数一遍、填进上面，再点「以实点设为期初」。之后账面张数会随每笔记录自动变化。";
+  else if($("#cntOpen").dataset.armed!=="1") $("#cntOpenNote").textContent="";
 }
-$("#count").addEventListener("input", e=>{
-  const d=e.target.dataset.d; if(!d) return;
-  S.counts[d]=e.target.value.replace(/\D/g,""); e.target.value=S.counts[d];
-  try{ localStorage.setItem("cashbox.count", JSON.stringify(S.counts)); }catch(err){}
-  updateCount();
-});
-$("#cntClear").onclick=()=>{ S.counts={}; try{ localStorage.removeItem("cashbox.count"); }catch(e){} renderCount(); };
+function queueCountWrite(){
+  clearTimeout(S.countTimer);
+  S.countTimer=setTimeout(()=>{
+    const ch={}; for(const d of S.countDirty) ch[d]=S.count[d]||0;
+    S.countDirty.clear();
+    setDoc(doc(S.db,"count","current"), {counts:ch, updatedBy:S.user.displayName||S.user.email, updatedAt:Date.now()}, {merge:true})
+      .catch(()=>{ $("#cntMeta").textContent="盘点数字保存失败，请检查网络。"; });
+  }, 500);
+}
+bindSteppers($("#count"), (k,d)=>S.count[d]||0, (k,d,n)=>{ S.count[d]=n; S.countDirty.add(String(d)); updateCount(); queueCountWrite(); });
+$("#cntClear").onclick=()=>{ for(const d of DENOMS){ S.count[d]=0; S.countDirty.add(String(d)); } updateCount(); queueCountWrite(); };
+$("#cntOpen").onclick=()=>{
+  const btn=$("#cntOpen");
+  if(btn.dataset.armed!=="1"){
+    btn.dataset.armed="1"; btn.classList.add("armed"); btn.textContent="确认设为期初";
+    $("#cntOpenNote").textContent="会以现在的实点为准，重新计算期初余额和各面额张数，让账面与实点一致。只在第一次使用或确认需要校准时使用。";
+    setTimeout(()=>{ if(btn.dataset.armed==="1"){ btn.dataset.armed=""; btn.classList.remove("armed"); btn.textContent="以实点设为期初"; updateCount(); } },6000);
+    return;
+  }
+  btn.dataset.armed=""; btn.classList.remove("armed"); btn.textContent="以实点设为期初";
+  // 期初张数 = 现在实点 − 所有记录累计的净张数，这样账面张数正好等于实点
+  const net=netCounts(), oc={};
+  for(const d of DENOMS) oc[d]=(S.count[d]||0)-(net[d]||0);
+  // 期初余额 = 现在实点合计 − 所有记录累计的收支净额
+  const opening = sumD(S.count) - Object.values(S.months).reduce((s,v)=>s+(v.in-v.out),0);
+  setDoc(doc(S.db,"meta","settings"), {opening, openingCounts:oc, updatedAt:Date.now(), byEmail:S.user.email})
+    .then(()=>{ $("#cntOpenNote").textContent=`已设定：期初余额 ${yen(opening)}。`; })
+    .catch(()=>{ $("#cntOpenNote").textContent="设定失败，请检查网络或权限。"; });
+};
 
 /* ---------- render ---------- */
 function render(){
@@ -456,12 +586,12 @@ function render(){
   $("#sOut").textContent=yen(tout); $("#sOutN").textContent=`${outs.length} 笔`;
   const sn=$("#sNet"); sn.textContent=signed(net); sn.className="v "+(net>0?"in":net<0?"out":"");
   $("#sEnd").textContent=`月初 ${yen(start)} → 月末 ${yen(end)}`;
-  if(document.activeElement!==$("#fOpen")) $("#fOpen").value = S.opening ? S.opening : "";
 
   drawChart(y,m,days,start,monthTx);
   drawCats(S.catView==="in"?ins:outs, S.catView);
   drawJournal(monthTx);
   updateCount();
+  updateForm();
 }
 
 function drawChart(y,m,days,start,monthTx){
@@ -509,20 +639,24 @@ function drawCats(list,kind){
   $("#cats").innerHTML=rows.map(([c,v])=>`<div class="cat"><span>${esc(c)}</span><span class="bar ${kind}"><b style="width:${(v/max*100).toFixed(1)}%"></b></span><span>${yen(v)}</span></div>`).join("");
 }
 
+function denLine(t){
+  const p=fmtDen(t.put), k=fmtDen(t.take);
+  return [p&&("放入 "+p), k&&("取出 "+k)].filter(Boolean).join(" ／ ");
+}
 function drawJournal(monthTx){
   const j=$("#journal");
   if(!S.loaded){ j.innerHTML=`<div class="empty">正在读取钱箱记录…</div>`; return; }
   if(!monthTx.length){
-    j.innerHTML=`<div class="empty">这个月还没有记录。<br>在「记一笔」输入金额和类别，点「记入钱箱」，所有设备会立即看到。</div>`; return;
+    j.innerHTML=`<div class="empty">这个月还没有记录。<br>在「记一笔」填写钞票、硬币张数和类别，点「记入钱箱」，所有设备会立即看到。</div>`; return;
   }
   const days={}; monthTx.forEach(t=>(days[t.date]=days[t.date]||[]).push(t));
   j.innerHTML=Object.keys(days).sort().reverse().map(ds=>{
     const list=days[ds].slice().reverse();
     const wd="日一二三四五六"[new Date(ds+"T00:00").getDay()];
     return `<div class="day"><div class="day-h"><span>${+ds.slice(5,7)}月${+ds.slice(8)}日 周${wd}</span><span class="num">日终余额 ${yen(balanceThrough(ds))}</span></div>`+
-      list.map(t=>`<div class="tx"><div class="t"><b>${esc(t.category||"未分类")}</b>${t.who?` <span style="font-size:12px;color:var(--muted)">· ${esc(t.who)}</span>`:""}${t.note?`<p>${esc(t.note)}</p>`:""}</div>
+      list.map(t=>{ const dl=denLine(t); return `<div class="tx"><div class="t"><b>${esc(t.category||"未分类")}</b>${t.who?` <span style="font-size:12px;color:var(--muted)">· ${esc(t.who)}</span>`:""}${t.note?`<p>${esc(t.note)}</p>`:""}${dl?`<p class="dn">${dl}</p>`:""}</div>
         <span class="a ${t.type}">${t.type==="in"?"+":"−"}${yen(t.amount)}</span>
-        <button type="button" class="del${S.armed===t.id?" armed":""}" data-id="${esc(t.id)}">${S.armed===t.id?"确认删除":"删除"}</button></div>`).join("")+`</div>`;
+        <button type="button" class="del${S.armed===t.id?" armed":""}" data-id="${esc(t.id)}">${S.armed===t.id?"确认删除":"删除"}</button></div>`; }).join("")+`</div>`;
   }).join("");
 }
 $("#journal").addEventListener("click", e=>{
@@ -531,9 +665,11 @@ $("#journal").addEventListener("click", e=>{
   if(S.armed!==id){ S.armed=id; render(); setTimeout(()=>{ if(S.armed===id){ S.armed=null; render(); } },4000); return; }
   S.armed=null;
   const t=S.monthTx.find(x=>x.id===id); if(!t) return;
+  const dDelta={};
+  for(const d of DENOMS){ const n=((t.put&&t.put[d])||0)-((t.take&&t.take[d])||0); if(n) dDelta[d]=increment(-n); }
   const b=writeBatch(S.db);
   b.delete(doc(S.db,"tx",id));
-  b.set(doc(S.db,"months",t.date.slice(0,7)), { [t.type]: increment(-t.amount) }, { merge:true });
+  b.set(doc(S.db,"months",t.date.slice(0,7)), { [t.type]: increment(-t.amount), d: dDelta }, { merge:true });
   b.commit().catch(err=>{ $("#fMsg").className="msg err"; $("#fMsg").textContent="删除失败："+(err.code||err.message); });
 });
 
@@ -541,8 +677,9 @@ $("#journal").addEventListener("click", e=>{
 $("#csv").addEventListener("click", ()=>{
   const key=curKey();
   const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-  const rows=[["日期","类型","类别","金额","经手人","备注","日终余额","记录人"]];
-  sortTx(S.monthTx).forEach(t=>rows.push([t.date,t.type==="in"?"收入":"支出",t.category,t.type==="in"?t.amount:-t.amount,t.who,t.note,balanceThrough(t.date),t.byEmail]));
+  const rows=[["日期","类型","类别","金额","经手人","备注","放入面额","取出面额","日终余额","记录人"]];
+  sortTx(S.monthTx).forEach(t=>rows.push([t.date,t.type==="in"?"收入":"支出",t.category,t.type==="in"?t.amount:-t.amount,t.who,t.note,
+    fmtDen(t.put),fmtDen(t.take),balanceThrough(t.date),t.byEmail]));
   const blob=new Blob(["﻿"+rows.map(r=>r.map(q).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`钱箱流水_${key}.csv`;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
