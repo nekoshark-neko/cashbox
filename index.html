@@ -43,6 +43,11 @@ button,input,select{font:inherit;color:inherit}
 .gate p{margin:0;color:var(--muted);font-size:14px}
 .gbtn{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:11px 14px;font-weight:500;cursor:pointer}
 .gbtn svg{width:18px;height:18px}
+.gis{width:100%;display:flex;justify-content:center;min-height:44px}
+/* 有官方按钮时，弹出窗口登录降为备用的文字链接 */
+.gbtn.alt{border:0;background:transparent;font-size:12px;color:var(--muted);text-decoration:underline;padding:4px;width:auto}
+.gbtn.alt svg{display:none}
+.gbtn.alt::after{content:"（备用方式）"}
 
 /* header */
 .top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
@@ -183,6 +188,7 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left}
   <div class="card">
     <h1>Take ONE 钱箱</h1>
     <p id="gateText">正在加载…</p>
+    <div id="gisBtn" class="gis" hidden></div>
     <button class="gbtn" id="loginBtn" type="button" hidden>
       <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
       用公司 Google 账号登录
@@ -276,9 +282,9 @@ input[type="date"]::-webkit-date-and-time-value{text-align:left}
 </div>
 
 <script type="module">
-import { firebaseConfig, ALLOWED_DOMAIN } from "./firebase-config.js";
+import { firebaseConfig, ALLOWED_DOMAIN, GOOGLE_CLIENT_ID } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, query, where,
   onSnapshot, writeBatch, increment, setDoc }
@@ -305,13 +311,13 @@ const now = new Date();
 const S = { monthTx:[], months:{}, opening:0, openingCounts:null, ym:[now.getFullYear(), now.getMonth()],
             type:"out", cat:CATS.out[0], catView:"out", change:false, form:{main:{},chg:{}},
             count:{}, countDirty:new Set(), countMeta:null, countTimer:null,
-            db:null, user:null, loaded:false, armed:null, unsubMonth:null, unsubs:[] };
+            db:null, user:null, loaded:false, armed:null, unsubMonth:null, unsubs:[], gis:false };
 const curKey = () => `${S.ym[0]}-${pad(S.ym[1]+1)}`;
 
 /* ---------- gate ---------- */
 function gate(text, {login=false, sw=false, err=""}={}){
   $("#app").hidden=true; $("#gate").hidden=false;
-  $("#gateText").textContent=text; $("#loginBtn").hidden=!login; $("#switchBtn").hidden=!sw; $("#gateErr").textContent=err;
+  $("#gateText").textContent=text; $("#loginBtn").hidden=!login; $("#gisBtn").hidden=true; $("#switchBtn").hidden=!sw; $("#gateErr").textContent=err;
 }
 
 if(Object.values(firebaseConfig).some(v=>String(v).includes("在这里"))){
@@ -342,11 +348,40 @@ $("#loginBtn").onclick = async ()=>{
 };
 $("#switchBtn").onclick = $("#logout").onclick = ()=>signOut(auth);
 
+// 首选 Google 官方「Sign in with Google」按钮：在 github.io 上直接拿到 Google 凭证再交给 Firebase，
+// 不经过 firebaseapp.com 的登录页，iPhone Safari 的跨站存储限制不会影响它。脚本加载失败时退回弹出窗口登录。
+function setupGis(){
+  if(!GOOGLE_CLIENT_ID || !window.google || !google.accounts || !google.accounts.id) return false;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID, hd: ALLOWED_DOMAIN, ux_mode: "popup", auto_select: false,
+    callback: async r=>{
+      $("#gateErr").textContent="";
+      try{ await signInWithCredential(auth, GoogleAuthProvider.credential(r.credential)); }
+      catch(e){ $("#gateErr").textContent="登录失败："+(e.code||e.message); }
+    }
+  });
+  const box=$("#gisBtn");
+  google.accounts.id.renderButton(box, { theme:"outline", size:"large", text:"signin_with", shape:"rectangular",
+    locale:"zh_CN", width: Math.min(320, box.clientWidth||320) });
+  return true;
+}
+if(GOOGLE_CLIENT_ID){
+  const s=document.createElement("script");
+  s.src="https://accounts.google.com/gsi/client"; s.async=true;
+  s.onload=()=>{ S.gis=setupGis(); if(!$("#gate").hidden && !$("#loginBtn").hidden) showLogin(); };
+  document.head.appendChild(s);
+}
+function showLogin(){
+  $("#gisBtn").hidden=!S.gis;
+  $("#loginBtn").classList.toggle("alt", !!S.gis);
+}
+
 onAuthStateChanged(auth, user=>{
   S.unsubs.forEach(u=>u()); S.unsubs=[]; if(S.unsubMonth){ S.unsubMonth(); S.unsubMonth=null; }
   S.user=user; S.loaded=false;
   if(!user){
     gate("请用公司（@"+ALLOWED_DOMAIN+"）的 Google 账号登录。",{login:true, err: IN_APP ? "你现在是在聊天软件里打开的，无法登录。"+OPEN_IN_BROWSER : ""});
+    showLogin();
     return;
   }
   if(!user.email || !user.email.toLowerCase().endsWith("@"+ALLOWED_DOMAIN) || !user.emailVerified){

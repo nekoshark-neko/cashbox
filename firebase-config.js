@@ -9,5 +9,8 @@ export const firebaseConfig = {
   appId: "1:391240636792:web:e7a6d688f280cb8020108d"
 };
 
+// Google 登录用的「Web 客户端 ID」：Firebase → Authentication → 登录方法 → Google → Web SDK 配置
+export const GOOGLE_CLIENT_ID = "391240636792-5kkhkdarnrvbvcp313dfc0rsnabnl02h.apps.googleusercontent.com";
+
 // 只有这个域名的 Google 账号可以登录记账（还需在 firestore.rules 里保持一致）
 export const ALLOWED_DOMAIN = "takeone51.com";
