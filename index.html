@@ -249,7 +249,7 @@ label.f,.f{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(-
 <script type="module">
 import { firebaseConfig, ALLOWED_DOMAIN } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut }
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, query, where,
   onSnapshot, writeBatch, increment, setDoc }
@@ -290,26 +290,30 @@ const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ hd: ALLOWED_DOMAIN, prompt: "select_account" });
 S.db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
 
+// 只用弹出窗口登录：网页在 github.io、登录在 firebaseapp.com，跳转式登录在手机浏览器里会因存储隔离而失败
+const IN_APP = /Line\/|MicroMessenger|FBAN|FBAV|Instagram|KAKAOTALK/i.test(navigator.userAgent);
+const OPEN_IN_BROWSER = "请点右上角菜单，选「在浏览器中打开」（Safari 或 Chrome），再登录。";
 $("#loginBtn").onclick = async ()=>{
   $("#gateErr").textContent="";
   try{ await signInWithPopup(auth, provider); }
   catch(e){
-    if(["auth/popup-blocked","auth/operation-not-supported-in-this-environment","auth/cancelled-popup-request"].includes(e.code)){
-      await signInWithRedirect(auth, provider);
-    }else if(e.code!=="auth/popup-closed-by-user"){
-      $("#gateErr").textContent = e.code==="auth/unauthorized-domain"
-        ? "这个网址还没加入 Firebase 的「已授权网域」，请按 README 第 3 步添加。"
-        : "登录失败："+(e.code||e.message);
-    }
+    if(e.code==="auth/popup-closed-by-user" || e.code==="auth/cancelled-popup-request") return;
+    $("#gateErr").textContent =
+      e.code==="auth/popup-blocked" ? "登录窗口被浏览器拦截了。请允许本网站弹出窗口，再点一次登录。" :
+      e.code==="auth/operation-not-supported-in-this-environment" || e.code==="auth/web-storage-unsupported" ? "这个浏览器不支持登录。"+OPEN_IN_BROWSER :
+      e.code==="auth/unauthorized-domain" ? "这个网址还没加入 Firebase 的「已授权网域」，请按 README 第 3 步添加。" :
+      "登录失败："+(e.code||e.message);
   }
 };
 $("#switchBtn").onclick = $("#logout").onclick = ()=>signOut(auth);
-getRedirectResult(auth).catch(e=>{ $("#gateErr").textContent="登录失败："+(e.code||e.message); });
 
 onAuthStateChanged(auth, user=>{
   S.unsubs.forEach(u=>u()); S.unsubs=[]; if(S.unsubMonth){ S.unsubMonth(); S.unsubMonth=null; }
   S.user=user; S.loaded=false;
-  if(!user){ gate("请用公司（@"+ALLOWED_DOMAIN+"）的 Google 账号登录。",{login:true}); return; }
+  if(!user){
+    gate("请用公司（@"+ALLOWED_DOMAIN+"）的 Google 账号登录。",{login:true, err: IN_APP ? "你现在是在聊天软件里打开的，无法登录。"+OPEN_IN_BROWSER : ""});
+    return;
+  }
   if(!user.email || !user.email.toLowerCase().endsWith("@"+ALLOWED_DOMAIN) || !user.emailVerified){
     gate(`${user.email||"这个账号"} 不是公司账号，没有权限。`,{sw:true}); return;
   }
